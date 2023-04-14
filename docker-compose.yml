@@ -1,0 +1,15 @@
+#This will run the whole project
+
+version: '3.8'
+
+services:
+
+  frontend:
+    build: ./frontend
+    hostname: frontend
+    container_name: frontend
+
+  backend:
+    build: ./backend
+    hostname: backend
+    container_name: backend
