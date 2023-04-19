@@ -12,7 +12,19 @@ services:
     ports:
       - "3000:3000"
 
-  backend:
-    build: ./backend
-    hostname: backend
-    container_name: backend
+  #backend:
+  #  build: ./backend
+  #  hostname: backend
+  #  container_name: backend
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - 27000:27017
+
+  mongo-seed:
+    build: ./mongo-seed
+    depends_on:
+      - mongodb
+    profiles: ["init"]
