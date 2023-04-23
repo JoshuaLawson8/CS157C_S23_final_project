@@ -1,6 +1,7 @@
 const express = require('express');
 var bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongodb');
 const ReviewModel = require('./ReviewModel');
 require('dotenv').config();
 
@@ -66,13 +67,26 @@ app.delete('/:id', async (req, res) => {
             res.status(404).send('Review not found');
             return;
         }
-        res.status(200).send(review);
+        res.status(204).send();
     } catch (err) {
         console.error(err);
         res.status(500).send(err.message);
     }
 });
 
+app.patch('/:id', async (req, res) => {
+    try {
+        const review = await updateByID(req.params.id, req.body);
+        if (!review) {
+            res.status(404).send('Review not found');
+            return;
+        }
+        res.status(200).send(review);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
 
 const getOneReview = async () => {
     return ReviewModel.findOne({});
@@ -91,8 +105,12 @@ const getByID = async (id) => {
     return ReviewModel.findById(id);
 }
 
-const func5 = async () => {
-    return ReviewModel.findOne({});
+const updateByID = async (id, review) => {
+    return ReviewModel.findOneAndUpdate({_id: new ObjectId(id)}, {
+        $set: review
+    }, {
+        new: true
+    });
 }
 
 
