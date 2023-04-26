@@ -10,7 +10,11 @@ The mongo-seed container will automatically populate the mongodb instance for yo
 
 - download the file `yelp_academic_dataset_review.json` from https://www.kaggle.com/datasets/yelp-dataset/yelp-dataset?select=yelp_academic_dataset_review.json
 
+- download the file `yelp_academic_dataset_business.json` from https://www.kaggle.com/datasets/yelp-dataset/yelp-dataset?select=yelp_academic_dataset_business.json
+
 - Add `yelp_academic_dataset_review.json` to the mongo-seed directory. 
+
+- Add `yelp_academic_dataset_business.json` to the mongo-seed directory.
 
 - After this, simply run `docker compose up mongo-seed` and the database will be initalized. Do be warned, it's a 5gb file and the loading will take 1-2 minutes.
 
