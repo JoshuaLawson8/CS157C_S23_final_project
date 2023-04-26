@@ -3,8 +3,8 @@ var bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const ReviewModel = require('./ReviewModel');
+const BusinessModel = require('./BusinessModel');
 require('dotenv').config();
-
 
 mongoose.connect(`${process.env.MONGO_URL || 'mongodb://localhost:27017'}/yelp`, { useNewUrlParser: true });
 
@@ -88,6 +88,21 @@ app.patch('/:id', async (req, res) => {
     }
 });
 
+app.get('/business/5stars', async (req, res) => {
+    try {
+        const business = await getByStars(5);
+        if (!business) {
+            res.status(404).send('5 stars restaurant not found');
+            return;
+        }
+        res.send("Stars" + business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+// Reviews
 const getOneReview = async () => {
     return ReviewModel.findOne({});
 }
@@ -111,6 +126,28 @@ const updateByID = async (id, review) => {
     }, {
         new: true
     });
+}
+
+// Business
+const getOneBusiness = async () => {
+    return BusinessModel.findOne({});
+}
+
+const createBusiness = async (review) => {
+    const newBusiness = new BusinessModel(review);
+    return newBusiness.save();
+}
+
+const deleteBusiness = async (id) => {
+    return BusinessModel.findByIdAndDelete(id);
+}
+
+const getByIDBusiness = async (id) => {
+    return BusinessModel.findById(id);
+}
+
+const getByStars = async (stars) => {
+    return BusinessModel.findOne({ stars: stars });
 }
 
 
