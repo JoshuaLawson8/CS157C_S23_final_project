@@ -88,18 +88,60 @@ app.patch('/:id', async (req, res) => {
     }
 });
 
-app.get('/business/5stars', async (req, res) => {
+app.get('/business/:stars', async (req, res) => {
     try {
-        const business = await getByStars(5);
+        const business = await getByStars(req.params.stars);
         if (!business) {
             res.status(404).send('5 stars restaurant not found');
             return;
         }
-        res.send("Stars" + business);
+        res.send(req.params.stars + "Stars restaurants: " + business);
     } catch (err) {
         console.error(err);
         res.status(500).send(err.message);
     }
+});
+
+app.get('/restaurants/reservations', async (req, res) => {
+   try{
+       const business = await getReservations();
+       if (!business) {
+           res.status(404).send('No restaurant allows reservations');
+           return;
+       }
+       res.send("Restaurants allow reservations: " + business);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/restaurants/goodforgroups', async (req, res) =>{
+   try{
+       const business = await getGoodForGroups();
+       if (!business){
+           res.status(404).send('No restaurant is good for groups');
+           return;
+       }
+       res.send("Restaurants that is good for groups: " + business);
+   } catch (err){
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/restaurants/takeout', async (req, res) => {
+   try{
+       const business = await getTakeOut();
+       if(!business){
+           res.status(404).send('No takeout restaurants are found');
+           return;
+       }
+       res.send("TakeOut restaurants: " + business);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
 });
 
 // Reviews
@@ -147,9 +189,20 @@ const getByIDBusiness = async (id) => {
 }
 
 const getByStars = async (stars) => {
-    return BusinessModel.findOne({ stars: stars });
+    return BusinessModel.find({ stars: stars });
 }
 
+const getReservations = async () => {
+    return BusinessModel.find({ "attributes.RestaurantsReservations": "True" }).limit(15);
+}
+
+const getGoodForGroups = async () =>{
+    return BusinessModel.find({ "attributes.RestaurantsGoodForGroups": "True" }).limit(15);
+}
+
+const getTakeOut = async () => {
+    return BusinessModel.find({ "attributes.RestaurantsTakeOut": "True" }).limit(15);
+}
 
 app.listen(port, () => {
     console.log(`Backend listening on port ${port}`)
