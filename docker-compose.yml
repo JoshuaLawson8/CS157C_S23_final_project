@@ -4,13 +4,13 @@ version: '3.8'
 
 services:
 
+  #since the frontend demands it's own exclusive terminal, run with regular docker
+  #you can build with docker compose, but run with `docker run --rm -it frontend in the frontend folder
   frontend:
     build: ./frontend
-    hostname: frontend
     container_name: frontend
     stdin_open: true
-    ports:
-      - "3000:3000"
+    profiles: ["DNR"]
 
   backend:
    build: ./backend

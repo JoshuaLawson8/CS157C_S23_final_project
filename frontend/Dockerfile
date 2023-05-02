@@ -1,10 +1,14 @@
-FROM node:17-alpine 
+FROM maven:3.6.0-jdk-11-slim AS build
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
+COPY ./src /home/cli/src
+COPY ./pom.xml /home/cli
 
-EXPOSE 3000
+RUN mvn -f /home/cli/pom.xml clean package
 
-CMD ["npm","start"]
+FROM openjdk:11-jre-slim
+
+WORKDIR /cli
+
+COPY --from=build /home/cli/target/frontend-1.0-SNAPSHOT-jar-with-dependencies.jar /usr/local/lib/frontend.jar
+
+CMD ["java", "-jar", "/usr/local/lib/frontend.jar"]
