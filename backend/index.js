@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({
 }));
 const port = 8080
 
-app.get('/', async (req, res) => {
+app.get('/review', async (req, res) => {
     try {
         const review = await getOneReview();
         res.send(review);
@@ -34,7 +34,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get('/:id', async (req, res) => {
+app.get('/review/search/:id', async (req, res) => {
     try {
         const review = await getByID(req.params.id);
         if (!review) {
@@ -49,7 +49,7 @@ app.get('/:id', async (req, res) => {
 });
 
 
-app.post('/', async (req, res) => {
+app.post('/review/post', async (req, res) => {
     try {
         console.log(req.body);
         const review = await createReview(req.body);
@@ -60,7 +60,7 @@ app.post('/', async (req, res) => {
     }
 });
 
-app.delete('/:id', async (req, res) => {
+app.delete('/review/delete/:id', async (req, res) => {
     try {
         const review = await deleteReview(req.params.id);
         if (!review) {
@@ -88,6 +88,75 @@ app.patch('/:id', async (req, res) => {
     }
 });
 
+app.get('/business', async (req, res) => {
+    try {
+        const business = await getOneBusiness();
+        if (!business) {
+            res.status(404).send('Business not found');
+            return;
+        }
+        res.send(business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+app.get('/business/search/:id', async (req, res) => {
+    try {
+        const business = await getByIDBusiness(req.params.id);
+        if (!business) {
+            res.status(404).send('Business not found');
+            return;
+        }
+        res.send(business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+
+app.post('/business/post', async (req, res) => {
+    try {
+        console.log(req.body);
+        const business = await createBusiness(req.body);
+        res.status(201).send(business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+app.delete('/business/delete/:id', async (req, res) => {
+    try {
+        const business = await deleteBusiness(req.params.id);
+        if (!business) {
+            res.status(404).send('Business not found');
+            return;
+        }
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+app.get('/business/reviews/:id', async (req, res) => {
+   try{
+       const reviews = await getBusinessReviews(req.params.id);
+       if (!reviews){
+           res.status(404).send('This business has no reviews')
+           return;
+       }
+       res.send(reviews);
+   } catch (err) {
+       console.log(err);
+       res.status(500).send(err.message);
+   }
+});
+
+
 app.get('/business/:stars', async (req, res) => {
     try {
         const business = await getByStars(req.params.stars);
@@ -95,7 +164,7 @@ app.get('/business/:stars', async (req, res) => {
             res.status(404).send('5 stars restaurant not found');
             return;
         }
-        res.send(req.params.stars + "Stars restaurants: " + business);
+        res.send(business);
     } catch (err) {
         console.error(err);
         res.status(500).send(err.message);
@@ -109,7 +178,7 @@ app.get('/restaurants/reservations', async (req, res) => {
            res.status(404).send('No restaurant allows reservations');
            return;
        }
-       res.send("Restaurants allow reservations: " + business);
+       res.send(business);
    } catch (err) {
        console.error(err);
        res.status(500).send(err.message)
@@ -123,7 +192,7 @@ app.get('/restaurants/goodforgroups', async (req, res) =>{
            res.status(404).send('No restaurant is good for groups');
            return;
        }
-       res.send("Restaurants that is good for groups: " + business);
+       res.send(business);
    } catch (err){
        console.error(err);
        res.status(500).send(err.message)
@@ -137,7 +206,7 @@ app.get('/restaurants/takeout', async (req, res) => {
            res.status(404).send('No takeout restaurants are found');
            return;
        }
-       res.send("TakeOut restaurants: " + business);
+       res.send(business);
    } catch (err) {
        console.error(err);
        res.status(500).send(err.message)
@@ -170,6 +239,10 @@ const updateByID = async (id, review) => {
     });
 }
 
+const getBusinessReviews = async (id) => {
+    return ReviewModel.find({"business_id": id}).limit(15);
+}
+
 // Business
 const getOneBusiness = async () => {
     return BusinessModel.findOne({});
@@ -189,7 +262,7 @@ const getByIDBusiness = async (id) => {
 }
 
 const getByStars = async (stars) => {
-    return BusinessModel.find({ stars: stars });
+    return BusinessModel.find({ stars: stars }).limit(15);
 }
 
 const getReservations = async () => {
