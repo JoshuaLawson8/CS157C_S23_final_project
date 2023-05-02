@@ -27,5 +27,9 @@ or
 and run this to clean old images:
 - `docker image prune -f`
 
+Check service logs:
+- `docker compose logs -f <service_name>`
+- (backend, frontend, mongo-seed, or mongodb)
+
 
 [Report on Google Doc](https://docs.google.com/document/d/17gdmrSls8qi8XwBnr2FxYBRLcjbqvjcUfUfsx5EISfE/)
