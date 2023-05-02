@@ -19,13 +19,13 @@ The mongo-seed container will automatically populate the mongodb instance for yo
 - After this, simply run `docker compose up mongo-seed` and the database will be initalized. Do be warned, it's a 5gb file and the loading will take 1-2 minutes.
 
 Change in code & reload service by:
-- docker-compose up --force-recreate --build -d backend
+- `docker-compose up --force-recreate --build -d backend`
 or
-- docker-compose up --force-recreate --build -d frontend
+- `docker-compose up --force-recreate --build -d frontend`
 or 
-- docker-compose up --force-recreate --build -d mongo-seed
+- `docker-compose up --force-recreate --build -d mongo-seed`
 and run this to clean old images:
-- docker image prune -f
+- `docker image prune -f`
 
 
 [Report on Google Doc](https://docs.google.com/document/d/17gdmrSls8qi8XwBnr2FxYBRLcjbqvjcUfUfsx5EISfE/)
