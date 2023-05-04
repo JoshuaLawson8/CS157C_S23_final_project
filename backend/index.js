@@ -74,7 +74,7 @@ app.delete('/review/delete/:id', async (req, res) => {
     }
 });
 
-app.patch('/:id', async (req, res) => {
+app.patch('/review/update/:id', async (req, res) => {
     try {
         const review = await updateByID(req.params.id, req.body);
         if (!review) {
@@ -213,6 +213,21 @@ app.get('/restaurants/takeout', async (req, res) => {
    }
 });
 
+app.patch('/business/update/:id', async (req, res) => {
+    try {
+        const business = await updateByIDBusiness(req.params.id, req.body);
+        if (!business) {
+            res.status(404).send('Business not found');
+            return;
+        }
+        res.status(200).send(business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+
 // Reviews
 const getOneReview = async () => {
     return ReviewModel.findOne({});
@@ -275,6 +290,14 @@ const getGoodForGroups = async () =>{
 
 const getTakeOut = async () => {
     return BusinessModel.find({ "attributes.RestaurantsTakeOut": "True" }).limit(15);
+}
+
+const updateByIDBusiness = async (id, review) => {
+    return BusinessModel.findOneAndUpdate({_id: new ObjectId(id)}, {
+        $set: review
+    }, {
+        new: true
+    });
 }
 
 app.listen(port, () => {
