@@ -5,7 +5,7 @@ version: '3.8'
 services:
 
   #since the frontend demands it's own exclusive terminal, run with regular docker
-  #you can build with docker compose, but run with `docker run --rm -it frontend in the frontend folder
+  #you can build with docker compose, but run with `docker run --rm -it frontend`
   frontend:
     build: ./frontend
     container_name: frontend

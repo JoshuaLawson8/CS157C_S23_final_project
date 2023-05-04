@@ -79,6 +79,22 @@ public class CLI {
         public void run() {}
     }
 
+        /**
+     * A command to query the db
+     */
+    @Command(name = "randReview", mixinStandardHelpOptions = true, version = "1.0",
+            description = {"get a random review."},
+            subcommands = {CommandLine.HelpCommand.class})
+    static class random implements Runnable {
+
+        @ParentCommand CliCommands parent;
+
+
+        public void run() {
+            
+        }
+    }
+
     /**
      * a list of preset requests
      */
