@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # check the collection has business data
 if [[ $(mongosh --host mongodb --quiet --eval "db.business.countDocuments()" yelp) -eq 0 ]]; then
     echo "Importing yelp business data into mongodb..."
