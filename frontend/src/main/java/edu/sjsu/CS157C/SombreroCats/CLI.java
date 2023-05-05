@@ -2,24 +2,22 @@ package edu.sjsu.CS157C.SombreroCats;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.jline.console.SystemRegistry;
-import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
-import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
-import org.jline.reader.impl.LineReaderImpl;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.widget.TailTipWidgets;
+import org.json.JSONObject;
 import picocli.CommandLine;
-import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
 import picocli.shell.jline3.PicocliCommands;
 import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
@@ -31,6 +29,7 @@ import java.util.function.Supplier;
  * The built-in {@code PicocliCommands.ClearScreen} command was introduced in picocli 4.6.
  * </p>
  */
+
 public class CLI {
 
     /**
@@ -42,8 +41,8 @@ public class CLI {
             footer = {"", "Press Ctrl-D to exit."},
             //add commands here as {command}.class
             subcommands = {
-                    query.class,
                     preset.class,
+                    random.class,
                     PicocliCommands.ClearScreen.class,
                     CommandLine.HelpCommand.class
             })
@@ -61,26 +60,26 @@ public class CLI {
         }
     }
 
+//    /**
+//     * A command to query the db
+//     */
+//    @Command(name = "query", mixinStandardHelpOptions = true, version = "1.0",
+//            description = {"perform a query in mongo syntax to the db."},
+//            subcommands = {CommandLine.HelpCommand.class})
+//    static class query implements Runnable {
+//
+//        @ParentCommand CliCommands parent;
+//// Example option:
+////        @Option(names = {"-h", "--host"}, defaultValue = "localhost",
+////                description = "host of db to connect to")
+////        private String host;
+//
+//
+//        public void run() {}
+//    }
+
     /**
-     * A command to query the db
-     */
-    @Command(name = "query", mixinStandardHelpOptions = true, version = "1.0",
-            description = {"perform a query in mongo syntax to the db."},
-            subcommands = {CommandLine.HelpCommand.class})
-    static class query implements Runnable {
-
-        @ParentCommand CliCommands parent;
-// Example option:
-//        @Option(names = {"-h", "--host"}, defaultValue = "localhost",
-//                description = "host of db to connect to")
-//        private String host;
-
-
-        public void run() {}
-    }
-
-        /**
-     * A command to query the db
+     * Gets a random review. Takes in no input.
      */
     @Command(name = "randReview", mixinStandardHelpOptions = true, version = "1.0",
             description = {"get a random review."},
@@ -89,28 +88,26 @@ public class CLI {
 
         @ParentCommand CliCommands parent;
 
-
-        public void run() {
-            
+        public void run()  {
+            String req = getRequest("http://localhost:8080/review");
+            JSONObject jsonReview = new JSONObject(req);
+            printReview(jsonReview);
         }
     }
 
     /**
      * a list of preset requests
      */
-    @Command(name = "preset", mixinStandardHelpOptions = true, version = "1.0",
+    @Command(name = "presetReview", mixinStandardHelpOptions = true, version = "1.0",
             description = {"choose one of the presets to retrieve.",
                     "Format: preset -n <i>"},
             subcommands = {CommandLine.HelpCommand.class})
     static class preset implements Runnable {
 
-        @CommandLine.ArgGroup(multiplicity = "1")
-        Exclusive exclusive;
-
-        static class Exclusive {
-            @CommandLine.Option(names = "-n", required = true)
-            int i;
-        }
+        @Parameters(index = "0", description = "The preset to retrieve. Options include:\n" +
+                "xyz\n" +
+                "abc\n")
+        private String opt;
 
         @ParentCommand
         CliCommands parent;
@@ -120,6 +117,36 @@ public class CLI {
         }
     }
 
+    private static String getRequest(String req) {
+        URL url = null;
+        try {
+            url = new URL(req);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(1000);
+            con.setReadTimeout(1000);
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine = in.readLine();
+            in.close();
+            con.disconnect();
+            return inputLine;
+        } catch (IOException e) {
+            System.out.println("Unable to parse request " + req + ". Is the backend up and have reviews been imported yet?\nExiting.");
+            System.exit(-1);
+        }
+        return null;
+    }
+
+    private static void printReview(JSONObject review){
+        System.out.println(
+                "stars: " +review.get("stars") + "\n" +
+                        "text: " + review.get("text") + "\n" +
+                        "date: " + review.get("date") + "\n" +
+                        "useful: " + review.get("useful") + "\n" +
+                        "funny: " + review.get("funny") + "\n" +
+                        "cool: " + review.get("cool")
+        );
+    }
 
     /**
      * Runnable for Yelp interpreter
