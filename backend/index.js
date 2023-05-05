@@ -34,6 +34,19 @@ app.get('/review', async (req, res) => {
     }
 });
 
+app.get('/reviews', async (req, res) => {
+    const size = req.query.size || 15;
+    const page = req.query.page || 1;
+    const skip = (page - 1) * size;
+    try {
+        const reviews = await ReviewModel.find({}).skip(skip).limit(size);
+        res.send(reviews);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
 app.get('/review/search/:id', async (req, res) => {
     try {
         const review = await getByID(req.params.id);
@@ -96,6 +109,19 @@ app.get('/business', async (req, res) => {
             return;
         }
         res.send(business);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+
+app.get('/businesses', async (req, res) => {
+    const size = req.query.size || 15;
+    const page = req.query.page || 1;
+    const skip = (page - 1) * size;
+    try {
+        const reviews = await BusinessModel.find({}).skip(skip).limit(size);
+        res.send(reviews);
     } catch (err) {
         console.error(err);
         res.status(500).send(err.message);
@@ -239,15 +265,15 @@ const createReview = async (review) => {
 }
 
 const deleteReview = async (id) => {
-    return ReviewModel.findByIdAndDelete(id);
+    return ReviewModel.findOneAndDelete({ review_id: id });
 }
 
 const getByID = async (id) => {
-    return ReviewModel.findById(id);
+    return ReviewModel.findOne({ review_id: id });
 }
 
 const updateByID = async (id, review) => {
-    return ReviewModel.findOneAndUpdate({_id: new ObjectId(id)}, {
+    return ReviewModel.findOneAndUpdate({review_id: id}, {
         $set: review
     }, {
         new: true
@@ -269,11 +295,11 @@ const createBusiness = async (review) => {
 }
 
 const deleteBusiness = async (id) => {
-    return BusinessModel.findByIdAndDelete(id);
+    return BusinessModel.findOneAndDelete({ business_id: id });
 }
 
 const getByIDBusiness = async (id) => {
-    return BusinessModel.findById(id);
+    return BusinessModel.findOne({ business_id: id });
 }
 
 const getByStars = async (stars) => {
@@ -293,7 +319,7 @@ const getTakeOut = async () => {
 }
 
 const updateByIDBusiness = async (id, review) => {
-    return BusinessModel.findOneAndUpdate({_id: new ObjectId(id)}, {
+    return BusinessModel.findOneAndUpdate({ business_id: id }, {
         $set: review
     }, {
         new: true
