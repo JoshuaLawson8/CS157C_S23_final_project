@@ -168,9 +168,9 @@ app.delete('/business/delete/:id', async (req, res) => {
     }
 });
 
-app.get('/business/reviews/:id', async (req, res) => {
+app.get('/business/reviews/:name', async (req, res) => {
    try{
-       const reviews = await getBusinessReviews(req.params.id);
+       const reviews = await getBusinessReviews(req.params.name);
        if (!reviews){
            res.status(404).send('This business has no reviews')
            return;
@@ -181,7 +181,6 @@ app.get('/business/reviews/:id', async (req, res) => {
        res.status(500).send(err.message);
    }
 });
-
 
 app.get('/business/:stars', async (req, res) => {
     try {
@@ -211,7 +210,7 @@ app.get('/restaurants/reservations', async (req, res) => {
    }
 });
 
-app.get('/restaurants/goodforgroups', async (req, res) =>{
+app.get('/restaurants/goodForGroups', async (req, res) =>{
    try{
        const business = await getGoodForGroups();
        if (!business){
@@ -233,6 +232,146 @@ app.get('/restaurants/takeout', async (req, res) => {
            return;
        }
        res.send(business);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/restaurants/most/reviews', async (req, res) => {
+   try{
+       const business = await getMostReviews();
+       if(!business){
+           res.status(404).send('No restaurants are found');
+           return;
+       }
+       res.send(business);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/bestRated', async (req, res) => {
+    try{
+       const restaurant = await getBestRated();
+       if(!restaurant){
+           res.status(404).send('No restaurants are found');
+           return;
+       }
+       res.send(restaurant);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/worstRated', async (req, res) => {
+    try{
+       const restaurant = await getWorstRated();
+       if(!restaurant){
+           res.status(404).send('No restaurants are found');
+           return;
+       }
+       res.send(restaurant);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/littleKnown', async (req, res) => {
+    try{
+       const restaurant = await getLittleKnown();
+       if(!restaurant){
+           res.status(404).send('No restaurants are found');
+           return;
+       }
+       res.send(restaurant);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/avgReviewLength', async (req, res) => {
+    try{
+       const length = await getAvgReviewLength();
+       if(!length){
+           res.status(404).send('No reviews are found');
+           return;
+       }
+       res.send(length);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/avgReviews', async (req, res) => {
+    try{
+       const avg_rating = await getAvgReviews();
+       if(!avg_rating){
+           res.status(404).send('No reviews are found');
+           return;
+       }
+       res.send(avg_rating);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/most4and5stars', async (req, res) => {
+    try{
+       const business = await getMost4and5Stars();
+       if(!business){
+           res.status(404).send('No business are found');
+           return;
+       }
+       res.send(business);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/userSentiment', async (req, res) => {
+    try{
+       const sentiments = await getUserSentiment();
+       if(!sentiments){
+           res.status(404).send('No reviews are found');
+           return;
+       }
+       res.send(sentiments);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/totalUniqueUsers', async (req, res) => {
+    try{
+       const totalUsers = await getTotalUniqueUsers();
+       if(!totalUsers){
+           res.status(404).send('No users are found');
+           return;
+       }
+       res.send(totalUsers);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
+app.get('/funniestReview', async (req, res) => {
+    try{
+       const review = await getFunniestReview();
+       if(!review){
+           res.status(404).send('No review are found');
+           return;
+       }
+       res.send(review);
    } catch (err) {
        console.error(err);
        res.status(500).send(err.message)
@@ -280,8 +419,25 @@ const updateByID = async (id, review) => {
     });
 }
 
-const getBusinessReviews = async (id) => {
-    return ReviewModel.find({"business_id": id}).limit(15);
+// get business' reviews
+const getBusinessReviews = async (name) => {
+    return BusinessModel.aggregate([ { $match: { name: name } },
+        { $lookup: { from: ReviewModel, localField: "business_id", foreignField: "business_id", as: "Reviews" } }]);
+}
+
+// get overall reviews' rating
+const getAvgReviews = async () => {
+    return ReviewModel.aggregate([{$group: {_id: null, avg_rating: {$avg: "$stars" }}}])
+}
+
+// get average reviews' text length
+const getAvgReviewLength = async () => {
+    return ReviewModel.aggregate([{$group: { _id: null, avgLength: { $avg: { $strLenCP: "$text"}}}}]);
+}
+
+// get the funniest review
+const getFunniestReview = async () => {
+    return ReviewModel.find().sort({funny: -1}).limit(1);
 }
 
 // Business
@@ -302,20 +458,60 @@ const getByIDBusiness = async (id) => {
     return BusinessModel.findOne({ business_id: id });
 }
 
+// filter business with certain star rating
 const getByStars = async (stars) => {
     return BusinessModel.find({ stars: stars }).limit(15);
 }
 
+// get business that allows reservations
 const getReservations = async () => {
     return BusinessModel.find({ "attributes.RestaurantsReservations": "True" }).limit(15);
 }
 
+// get business that is good for groups
 const getGoodForGroups = async () =>{
     return BusinessModel.find({ "attributes.RestaurantsGoodForGroups": "True" }).limit(15);
 }
 
+// get business that allows takeout order
 const getTakeOut = async () => {
     return BusinessModel.find({ "attributes.RestaurantsTakeOut": "True" }).limit(15);
+}
+
+// get the business with most reviews
+const getMostReviews = async () => {
+    return BusinessModel.find().sort({review_count: -1}).limit(1);
+}
+
+// get the restaurant with best rating
+const getBestRated = async () => {
+    return BusinessModel.find({categories: "Restaurants"}).sort({stars: -1}).limit(1);
+}
+
+// get the restaurant with worst rating
+const getWorstRated = async () => {
+    return BusinessModel.find({categories: "Restaurants"}).sort({stars: 1}).limit(1);
+}
+
+// get little known restaurants which have the least reviews but mostly
+// positive
+const getLittleKnown = async () => {
+    return BusinessModel.find({categories: "Restaurants", review_count: {$gt: 0}}).sort({stars: -1, review_count: 1}).limit(5);
+}
+
+// get the restaurants with the most 4 and 5 star reviews
+const getMost4and5Stars = async () => {
+    return ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 5 }]);
+}
+
+// get overall users' sentiment
+const getUserSentiment = async () => {
+    return ReviewModel.aggregate([{$group: {_id: "$user_id", avg_rating: {$avg: "$stars"}}}]);
+}
+
+// count the number of total unique users
+const getTotalUniqueUsers = async () => {
+    return ReviewModel.aggregate([{$group: {_id: "$user_id",count: { $sum: 1 }}},{$group: {_id: null,total: { $sum: 1 }}}]);
 }
 
 const updateByIDBusiness = async (id, review) => {
