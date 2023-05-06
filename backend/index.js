@@ -118,9 +118,16 @@ app.get('/business', async (req, res) => {
 app.get('/businesses', async (req, res) => {
     const size = req.query.size || 15;
     const page = req.query.page || 1;
+    const name = req.query.name || '';
+
     const skip = (page - 1) * size;
+    const query = {};
+    if (name !== '') {
+        query.name = { $regex: name, $options: 'i' };
+    }
+
     try {
-        const reviews = await BusinessModel.find({}).skip(skip).limit(size);
+        const reviews = await BusinessModel.find(query).skip(skip).limit(size);
         res.send(reviews);
     } catch (err) {
         console.error(err);
