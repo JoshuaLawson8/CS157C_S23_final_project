@@ -378,6 +378,20 @@ app.get('/funniestReview', async (req, res) => {
    }
 });
 
+app.get('/mostPositiveReviewer', async (req, res) => {
+    try{
+       const reviewer = await getMostPositiveReviewer();
+       if(!reviewer){
+           res.status(404).send('No reviewer are found');
+           return;
+       }
+       res.send(reviewer);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
 app.patch('/business/update/:id', async (req, res) => {
     try {
         const business = await updateByIDBusiness(req.params.id, req.body);
@@ -458,6 +472,37 @@ const getByIDBusiness = async (id) => {
     return BusinessModel.findOne({ business_id: id });
 }
 
+// get the restaurant with best rating
+const getBestRated = async () => {
+    return BusinessModel.find({categories: "Restaurants"}).sort({stars: -1}).limit(1);
+}
+
+// get the restaurant with worst rating
+const getWorstRated = async () => {
+    return BusinessModel.find({categories: "Restaurants"}).sort({stars: 1}).limit(1);
+}
+
+// get the business with most reviews
+const getMostReviews = async () => {
+    return BusinessModel.find().sort({review_count: -1}).limit(1);
+}
+
+// get little known restaurants which have the least reviews but mostly
+// positive
+const getLittleKnown = async () => {
+    return BusinessModel.find({categories: "Restaurants", review_count: {$gt: 0}}).sort({stars: -1, review_count: 1}).limit(5);
+}
+
+// get the restaurants with the most 4 and 5 stars reviews
+const getMost4and5Stars = async () => {
+    var top_businesses = ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 5 }]);
+    var business_ids = [];
+    top_businesses.forEach(function(business) {
+        business_ids.push(business._id);
+    });
+    return BusinessModel.find({ business_id: { $in: business_ids } });
+}
+
 // filter business with certain star rating
 const getByStars = async (stars) => {
     return BusinessModel.find({ stars: stars }).limit(15);
@@ -478,32 +523,6 @@ const getTakeOut = async () => {
     return BusinessModel.find({ "attributes.RestaurantsTakeOut": "True" }).limit(15);
 }
 
-// get the business with most reviews
-const getMostReviews = async () => {
-    return BusinessModel.find().sort({review_count: -1}).limit(1);
-}
-
-// get the restaurant with best rating
-const getBestRated = async () => {
-    return BusinessModel.find({categories: "Restaurants"}).sort({stars: -1}).limit(1);
-}
-
-// get the restaurant with worst rating
-const getWorstRated = async () => {
-    return BusinessModel.find({categories: "Restaurants"}).sort({stars: 1}).limit(1);
-}
-
-// get little known restaurants which have the least reviews but mostly
-// positive
-const getLittleKnown = async () => {
-    return BusinessModel.find({categories: "Restaurants", review_count: {$gt: 0}}).sort({stars: -1, review_count: 1}).limit(5);
-}
-
-// get the restaurants with the most 4 and 5 star reviews
-const getMost4and5Stars = async () => {
-    return ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 5 }]);
-}
-
 // get overall users' sentiment
 const getUserSentiment = async () => {
     return ReviewModel.aggregate([{$group: {_id: "$user_id", avg_rating: {$avg: "$stars"}}}]);
@@ -512,6 +531,10 @@ const getUserSentiment = async () => {
 // count the number of total unique users
 const getTotalUniqueUsers = async () => {
     return ReviewModel.aggregate([{$group: {_id: "$user_id",count: { $sum: 1 }}},{$group: {_id: null,total: { $sum: 1 }}}]);
+}
+
+const getMostPositiveReviewer = async () => {
+    return ReviewModel.aggregate([{$match: {stars: 5}},{$group: {_id: "$user_id", count: {$sum: 1}}},{$sort: {count: -1}},{$limit: 1},{$project: {_id: 1}}]);
 }
 
 const updateByIDBusiness = async (id, review) => {
