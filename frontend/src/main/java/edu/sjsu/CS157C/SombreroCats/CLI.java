@@ -84,6 +84,29 @@ public class CLI {
     }
 
     /**
+     * business search
+     */
+    @Command(name = "search", mixinStandardHelpOptions = false, version = "1.0",
+            description = "search for a business by a name param.")
+    static class find implements Runnable {
+
+        @Parameters(index = "0", description = "The name of the restaurant to search for")
+        private String name;
+
+        @Option(names = {"-h", "--help"}, usageHelp = true,description = "Display this help and exit")
+        private boolean help;
+
+        @ParentCommand
+        CliCommands parent;
+
+        @Override
+        public void run() {
+
+        }
+    }
+
+
+    /**
      * a list of preset requests
      */
     @Command(name = "get", mixinStandardHelpOptions = false, version = "1.0",
@@ -95,7 +118,10 @@ public class CLI {
                 "littleKnown\n" +
                 "mostReviews\n" +
                 "funniestReview\n" +
-                "mostHighRatings")
+                "mostHighRatings\n" +
+                "goodForGroups\n" +
+                "takesReservations\n" +
+                "takeout")
         private String preset;
 
         @Option(names = {"-h", "--help"}, usageHelp = true,description = "Display this help and exit")
@@ -128,11 +154,27 @@ public class CLI {
                     obj = getRequest("funniestReview");
                     jsonObj = new JSONArray(obj).getJSONObject(0);
                     break;
-//                case "mostHighRatings":
-//                    String restID = (String) new JSONArray(getRequest("most4and5stars")).getJSONObject(0).get("_id");
-//                    obj = getRequest()
-//                    jsonObj = new JSONArray(obj).getJSONObject(0);
-//                    break;
+                case "goodForGroups":
+                    obj = getRequest("restaurants/goodForGroups");
+                    for(int i = 0; i < 3; i++){
+                        printRest(new JSONArray(obj).getJSONObject(i));
+                        System.out.println("----------------------------------");
+                    }
+                    return;
+                case "takesReservations":
+                    obj = getRequest("restaurants/reservations");
+                    for(int i = 0; i < 3; i++){
+                        printRest(new JSONArray(obj).getJSONObject(i));
+                        System.out.println("----------------------------------");
+                    }
+                    return;
+                case "takeout":
+                    obj = getRequest("restaurants/takeout");
+                    for(int i = 0; i < 3; i++){
+                        printRest(new JSONArray(obj).getJSONObject(i));
+                        System.out.println("----------------------------------");
+                    }
+                    return;
                 default:
                     obj = "no match";
             }
@@ -203,6 +245,7 @@ public class CLI {
         URL url = null;
         try {
             url = new URL(fetchURL+req);
+            System.out.println(url);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             //30 sec timeout
