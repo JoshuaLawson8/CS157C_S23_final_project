@@ -170,7 +170,8 @@ app.delete('/business/delete/:id', async (req, res) => {
 
 app.get('/business/reviews/:name', async (req, res) => {
    try{
-       const reviews = await getBusinessReviews(req.params.name);
+       const formattedStr = req.params.name.replace(/_/g, ' ').replace(/\b(\w)/g, (match) => match.toUpperCase());
+       const reviews = await getBusinessReviews(formattedStr);
        if (!reviews){
            res.status(404).send('This business has no reviews')
            return;
@@ -392,6 +393,20 @@ app.get('/mostPositiveReviewer', async (req, res) => {
    }
 });
 
+app.get('/mostReviewer', async (req, res) => {
+    try{
+       const reviewer = await getMostReviewer();
+       if(!reviewer){
+           res.status(404).send('No reviewer are found');
+           return;
+       }
+       res.send(reviewer);
+   } catch (err) {
+       console.error(err);
+       res.status(500).send(err.message)
+   }
+});
+
 app.patch('/business/update/:id', async (req, res) => {
     try {
         const business = await updateByIDBusiness(req.params.id, req.body);
@@ -435,8 +450,7 @@ const updateByID = async (id, review) => {
 
 // get business' reviews
 const getBusinessReviews = async (name) => {
-    return BusinessModel.aggregate([ { $match: { name: name } },
-        { $lookup: { from: ReviewModel, localField: "business_id", foreignField: "business_id", as: "Reviews" } }]);
+    return BusinessModel.aggregate([ { $match: { name: name } },{ $lookup: { from: ReviewModel, localField: "business_id", foreignField: "business_id", as: "Reviews" } }]);
 }
 
 // get overall reviews' rating
@@ -495,12 +509,7 @@ const getLittleKnown = async () => {
 
 // get the restaurants with the most 4 and 5 stars reviews
 const getMost4and5Stars = async () => {
-    var top_businesses = ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 5 }]);
-    var business_ids = [];
-    top_businesses.forEach(function(business) {
-        business_ids.push(business._id);
-    });
-    return BusinessModel.find({ business_id: { $in: business_ids } });
+    return ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 1 }]);
 }
 
 // filter business with certain star rating
@@ -535,6 +544,10 @@ const getTotalUniqueUsers = async () => {
 
 const getMostPositiveReviewer = async () => {
     return ReviewModel.aggregate([{$match: {stars: 5}},{$group: {_id: "$user_id", count: {$sum: 1}}},{$sort: {count: -1}},{$limit: 1},{$project: {_id: 1}}]);
+}
+
+const getMostReviewer = async () => {
+    return ReviewModel.aggregate([{ $group: { _id: "$user_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 1 }])
 }
 
 const updateByIDBusiness = async (id, review) => {
