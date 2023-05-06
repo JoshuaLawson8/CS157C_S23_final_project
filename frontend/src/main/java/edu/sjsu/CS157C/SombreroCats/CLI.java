@@ -21,6 +21,8 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
@@ -47,6 +49,7 @@ public class CLI {
             subcommands = {
                     get.class,
                     stats.class,
+                    find.class,
                     test.class,
                     //CommandLine.HelpCommand.class
             })
@@ -86,7 +89,7 @@ public class CLI {
     /**
      * business search
      */
-    @Command(name = "search", mixinStandardHelpOptions = false, version = "1.0",
+    @Command(name = "find", mixinStandardHelpOptions = false, version = "1.0",
             description = "search for a business by a name param.")
     static class find implements Runnable {
 
@@ -101,7 +104,17 @@ public class CLI {
 
         @Override
         public void run() {
-
+            String req = getRequest("businesses?name="+URLEncoder.encode(name, StandardCharsets.UTF_8));
+            JSONArray businesses = new JSONArray(req);
+            boolean atLeastOne = false;
+            for(int i = 0; i < businesses.length() && i < 3; i ++){
+                printRest(businesses.getJSONObject(i));
+                System.out.println("---------------------------------");
+                atLeastOne = true;
+            }
+            if(!atLeastOne){
+                System.out.println("Sorry! No matches found : (");
+            }
         }
     }
 
@@ -121,7 +134,8 @@ public class CLI {
                 "mostHighRatings\n" +
                 "goodForGroups\n" +
                 "takesReservations\n" +
-                "takeout")
+                "takeout\n" +
+                "most4and5stars")
         private String preset;
 
         @Option(names = {"-h", "--help"}, usageHelp = true,description = "Display this help and exit")
@@ -175,6 +189,13 @@ public class CLI {
                         System.out.println("----------------------------------");
                     }
                     return;
+                case "most4and5stars":
+                    obj = getRequest("most4and5stars");
+                    for(int i = 0; i < 3; i++){
+                        printRest(new JSONArray(obj).getJSONObject(i));
+                        System.out.println("----------------------------------");
+                    }
+                    return;
                 default:
                     obj = "no match";
             }
@@ -202,7 +223,7 @@ public class CLI {
                 "avgReviewLength\n" +
                 "averageRating\n" +
                 "totalUniqueUsers\n" +
-                "userSentiment\n")
+                "mostReviews")
         private String stat;
 
         @Option(names = {"-h", "--help"}, usageHelp = true,description = "Display this help and exit")
@@ -231,11 +252,11 @@ public class CLI {
                     jsonObj = new JSONArray(obj).getJSONObject(0);
                     System.out.println("total unique users: " + jsonObj.get("total"));
                     return;
-//                case "userSentiment":
-//                    obj = getRequest("avgReviews");
-//                    jsonObj = new JSONArray(obj).getJSONObject(0);
-//                    System.out.println("Average rating of a restaurant: " + Math.round(((BigDecimal) jsonObj.get("avg_rating")).doubleValue()*100.0)/100.0);
-//                    return;
+                case "mostReviews":
+                    obj = getRequest("mostReviewer");
+                    jsonObj = new JSONArray(obj).getJSONObject(0);
+                    System.out.println("Most reviews posted by a user: " + jsonObj.get("count"));
+                    return;
             }
             System.out.println("No match found, sorry! : (");
         }
@@ -245,7 +266,6 @@ public class CLI {
         URL url = null;
         try {
             url = new URL(fetchURL+req);
-            System.out.println(url);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             //30 sec timeout
