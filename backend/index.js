@@ -509,7 +509,8 @@ const getLittleKnown = async () => {
 
 // get the restaurants with the most 4 and 5 stars reviews
 const getMost4and5Stars = async () => {
-    return ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 1 }]);
+    const top_businesses = await ReviewModel.aggregate([{ $match: { stars: { $in: [4, 5] } } },{ $group: { _id: "$business_id", count: { $sum: 1 } } },{ $sort: { count: -1 } },{ $limit: 5 }]);
+    return BusinessModel.find({ business_id: { $in: top_businesses.map(business => business._id) } });
 }
 
 // filter business with certain star rating
