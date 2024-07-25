@@ -1,5 +1,15 @@
 # CS157C_S23_final_project
 
+Pulls various metrics out of a yelp data set, such as:
+
+- highest reviewed, most rated restaurant
+
+- worst reviewed, most rated restaurant
+
+- little known, but well rated
+
+- and many more!
+
 To build the whole project, use `docker compose up` in the base directory. 
 
 To run individual containers, run either `docker compose up frontend` or `docker compose up backend`
