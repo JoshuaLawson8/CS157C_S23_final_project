@@ -2,9 +2,9 @@
 
 Pulls various metrics out of a yelp data set, such as:
 
-- highest reviewed, most rated restaurant
+- highest reviewed, most rated restaurant (in the us!)
 
-- worst reviewed, most rated restaurant
+- worst reviewed, most rated restaurant (in the us!)
 
 - little known, but well rated
 
